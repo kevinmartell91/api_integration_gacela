@@ -29,6 +29,6 @@ $settings_results  = json_decode($settings_output);
 echo "<pre>" . print_r($settings_results, 1) . "</pre>";
 curl_close($ch);
 ?>
-<div class="test">
+<!-- <div class="test">
 	DONE
-</div>
+</div> -->

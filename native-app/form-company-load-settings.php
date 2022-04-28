@@ -20,10 +20,7 @@ $settings = $settings->gacela_settings;
 // load stores from Gacela Api
 include "../config/env.php";
 
-
-
 // Start GET Store Request  => no records yet
-
 $curl = curl_init();
 
 curl_setopt_array($curl, array(
@@ -36,7 +33,7 @@ curl_setopt_array($curl, array(
   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
   CURLOPT_CUSTOMREQUEST => 'GET',
   CURLOPT_HTTPHEADER => array(
-    'Authorization: Bearer ' . DEV_COMPANY_API_TOKEN,
+    'Authorization: Bearer ' . $settings->company_api_token,
     'Content-Type: application/json'
   ),
 ));
@@ -44,47 +41,8 @@ curl_setopt_array($curl, array(
 $response = curl_exec($curl);
 
 curl_close($curl);
-echo $response;
 
-$data = json_decode($response, true);
-
-echo "<pre>" . print_r($data, 1) . "</pre>";
-// End GET Store Request 
-
-
-
-curl_setopt_array($ch, array(
-  CURLOPT_URL => 'https://gacela.dev/api/company/stores_info',
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_ENCODING => '',
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 0,
-  CURLOPT_FOLLOWLOCATION => true,
-  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-  CURLOPT_CUSTOMREQUEST => 'GET',
-  CURLOPT_HTTPHEADER => array(
-    'Authorization: Bearer ' . DEV_COMPANY_API_TOKEN
-  ),
-));
-
-$response = curl_exec($ch);
-curl_close($ch);
-
-
-$result = json_decode($response, true);
-
-$gacela_store_api_token = $result['results']['stores'][0]['api_token'];
-$external_id = $result['results']['stores'][0]['external_id'];
-$email = $result['results']['stores'][0]['email'];
-$name = $result['results']['stores'][0]['name'];
-$latitude = $result['results']['stores'][0]['latitude'];
-$longitude = $result['results']['stores'][0]['longitude'];
-$address = $result['results']['stores'][0]['address'];
-$reference = $result['results']['stores'][0]['reference'];
-$contact_name = $result['results']['stores'][0]['contact_name'];
-$contact_lastname = $result['results']['stores'][0]['contact_lastname'];
-$contact_phone = $result['results']['stores'][0]['contact_phone'];
-$webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_updates'];
+$storesRequest = json_decode($response, true);
 
 ?>
 
@@ -218,7 +176,7 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
           <!-- End config title -->
 
           <!-- Start Paso 1  -->
-          <div class="a-card a-card--compact a-card--has-hover">
+          <div class="a-card a-card--compact ">
             <div class="a-card__paddings">
               <div class="iconable-block iconable-block--info iconable-block--hide-in-mobile">
                 <div class="iconable-block__infographics">
@@ -328,7 +286,7 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
           <!-- End Paso 1  -->
 
           <!-- Start Paso 2  -->
-          <div class="a-card a-card--compact a-card--has-hover">
+          <div class="a-card a-card--compact">
             <div class="a-card__paddings">
               <div class="iconable-block iconable-block--info iconable-block--disabled iconable-block--hide-in-mobile">
                 <div class="iconable-block__infographics">
@@ -405,7 +363,8 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
                                   name="accessToken"
                                   value="<?php echo $_POST['accessToken']; ?>"
                                 /> -->
-                          <button type="button" class="btn btn-primary btn-medium btn-open-new-store-form" tabindex="5">
+
+                          <button type="button" class="btn btn-primary btn-medium btn-open-new-store-form" <?php if ($storesRequest['status'] == "Usuario no autorizado.") echo "disabled" ?> tabindex="5">
                             Crear nuevo punto de rocojo
                           </button>
                           <button style="display: none" class="btn btn-primary btn-medium btn-loading btn-open-new-store-form-loading">
@@ -428,7 +387,7 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
           <!-- End of Paso 2 -->
 
           <!-- Start Paso 3  -->
-          <div class="a-card a-card--compact a-card--has-hover">
+          <div class="a-card a-card--compact ">
             <div class="a-card__paddings">
               <div class="iconable-block iconable-block--info iconable-block--disabled iconable-block--hide-in-mobile">
                 <div class="iconable-block__infographics">
@@ -490,56 +449,56 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
                         Paso 3. Selecione y edite su puntos de recojo
                       </div>
                       <div class="cta-block__content">
-                        <div>
-                          Esta opción le permite selecionar su punto de recojo aprovado por gacela y editarla.
-                        </div>
 
+                        <br>
 
-                        <!-- loop for each store -->
-                        <div class="flex-table">
-                          <div class="flex-table__head">
-                            <div class="flex-table__col flex-table__col--align-left">Nombre</div>
-                            <div class="flex-table__col flex-table__col--align-center">Email</div>
-                            <!-- <div class="flex-table__col flex-table__col--align-right">Nombre</div> -->
-                            <div class="flex-table__col flex-table__col--align-right"></div>
-                          </div>
-                          <?php foreach ($result['results']['stores'] as $index => $array) : ?>
-                            <div class="flex-table__row">
+                        <?php if ($storesRequest['status'] == "Usuario no autorizado.") : ?>
+                          <button class="btn btn-primary" disabled="">
+                            <span>Usted no cuenta con puntos de recojo. Agrege una en el paso 2.</span>
+                          </button>
+                        <?php else : ?>
 
-                              <div class="flex-table__col flex-table__col--align-left">
-                                <?php echo $array['name']; ?>
-                              </div>
-
-                              <div class="flex-table__col flex-table__col--align-center">
-                                <?php echo $array['email']; ?>
-                              </div>
-
-                              <div class="flex-table__col flex-table__col--align-right">
-                                <!-- link button -->
-
-                                <form class="store-edit-settings-form">
-                                  <div class="form-area__action">
-                                    <input type="hidden" name="storeId" value="<?php echo $array['external_id']; ?>" />
-                                    <input type="hidden" name="store" value="<?php echo http_build_query($array); ?>" />
-                                    <button type="button" class="btn btn-link btn-edit-settings-store" tabindex="5">
-                                      <?php echo "Editar" ?>
-                                    </button>
-                                    <button style="display: none" class="btn btn-link btn-loading btn-edit-settings-store-loading">
-                                      <span>Primary Large button</span>
-                                    </button>
-                                  </div>
-                                </form>
-
-                              </div>
-
-
-
-
+                          <!-- Start table => loop for each store -->
+                          <div class="flex-table">
+                            <div class="flex-table__head">
+                              <div class="flex-table__col flex-table__col--align-left">Nombre</div>
+                              <div class="flex-table__col flex-table__col--align-center">Estatus</div>
+                              <!-- <div class="flex-table__col flex-table__col--align-right">Opciones</div> -->
+                              <!-- <div class="flex-table__col flex-table__col--align-right"></div> -->
                             </div>
+                            <?php foreach ($storesRequest['results'] as $index => $array) : ?>
+                              <div class="flex-table__row">
 
-                          <?php endforeach; ?>
-                        </div>
-                        <!-- loop for eac store -->
+                                <div class="flex-table__col flex-table__col--align-left">
+                                  <?php echo $array['name']; ?>
+                                </div>
+
+                                <div class="flex-table__col flex-table__col--align-center">
+                                  <?php echo $array['status']; ?>
+                                </div>
+
+                                <div class="flex-table__col flex-table__col--align-right">
+                                  <!-- link button -->
+
+                                  <form id="<?php echo $array['external_id'] ?> " class="store-edit-settings-form_<?php echo $array['external_id'] ?>">
+                                    <div class="form-area__action">
+                                      <input type="hidden" name="external_id" value="<?php echo $array['external_id']; ?>" />
+                                      <!-- <input type="hidden" name="store" value="<?php echo http_build_query($array['store']); ?>" /> -->
+                                      <button type="button" class="btn btn-link btn-edit-settings-store_<?php echo $array['external_id'] ?>" tabindex="5">
+                                        <?php echo "Editar" ?>
+                                      </button>
+                                      <button style="display: none" class="btn btn-link btn-loading btn-edit-settings-store-loading_<?php echo $array['external_id'] ?>">
+                                        <span>Primary Large button</span>
+                                      </button>
+                                    </div>
+                                  </form>
+                                </div>
+                              </div>
+                            <?php endforeach; ?>
+                          </div>
+                          <!-- End table =>loop for eac store -->
+                        <?php endif ?>
+
 
                       </div>
                     </div>
@@ -581,8 +540,9 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
           success: function(data) {
             jQuery(".btn-company-setting-save").show();
             jQuery(".btn-company-setting-loading").hide();
+            header("Refresh:0");
             // to remove
-            jQuery(".store-form-section").html(data);
+            // jQuery(".store-form-section").html(data);
 
           },
           error: function(err) {
@@ -627,28 +587,45 @@ $webhook_status_updates = $result['results']['stores'][0]['webhooks']['status_up
   <!-- JS for EACH store settings  (for now to store 1 - static store)-->
   <script type="text/javascript">
     jQuery(document).ready(function() {
-      jQuery("body").on("click", ".btn-edit-settings-store", function(e) {
-        e.preventDefault();
-        jQuery(".btn-edit-settings-store-loading").show();
-        jQuery(this).hide();
-        jQuery.ajax({
-          url: "form-store-load-settings.php",
-          type: "post",
-          data: {
-            mode: 'edit-store',
-            form: {
-              title: 'Editar punto de rocojo',
-              message: 'Actualize los campos deseados'
-            },
-            json: jQuery(".store-edit-settings-form").serialize(),
-          },
-          success: function(data) {
-            jQuery(".btn-edit-settings-store").show();
-            jQuery(".btn-edit-settings-store-loading").hide();
-            jQuery(".store-form-section").html(data);
-          },
-        });
+      // dynamic
+      var storeIds = [];
+      jQuery("form").each(function() {
+        storeIds.push($(this).attr('id'));
       });
+      console.log(storeIds);
+      // dynamic
+      storeIds.forEach(storeId => {
+        jQuery("body").on("click", ".btn-edit-settings-store_" + storeId, function(e) {
+          e.preventDefault();
+          jQuery(".btn-edit-settings-store-loading_" + storeId).show();
+          jQuery(this).hide();
+          jQuery.ajax({
+            url: "form-store-load-settings.php",
+            type: "post",
+            data: {
+              mode: 'edit-store',
+              form: {
+                title: 'Editar punto de rocojo',
+                message: 'Actualize los campos deseados'
+              },
+              json: jQuery(".store-edit-settings-form_" + storeId).serialize(),
+            },
+            success: function(data) {
+              jQuery(".btn-edit-settings-store_" + storeId).show();
+              jQuery(".btn-edit-settings-store-loading_" + storeId).hide();
+              jQuery(".store-form-section").html(data);
+              //location.reload();
+              windowwindow.location = window.location.href;
+            },
+          });
+
+        });
+
+      });
+
+
     });
   </script>
+  <script src="https://d35z3p2poghz10.cloudfront.net/ecwid-sdk/css/1.3.13/ecwid-app-ui.min.js"></script>
+
 </div>

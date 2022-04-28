@@ -1,30 +1,61 @@
 <?php
 // set as read mode when load this file
+// echo "<pre>" .  print_r($_POST, 1) . "</pre>";
 $readOnly = "fieldset--readonly";
-
 if (isset($_POST['mode']) && $_POST['mode'] == 'edit-store') {
   // edit mode, so remove <fieldset--readonly> class
   $readOnly = "";
 
   parse_str($_POST['json'], $parsed);
-  foreach ($parsed as $key => $val) {
-    if ($key == 'store') {
-      parse_str($val, $payload);
+  // foreach ($parsed as $key => $val) {
+  //   // if ($key == 'external_id') {
+  //   parse_str($val, $payload);
+  //   // }
+  // }
+  $external_id = $parsed['external_id'];
+
+  include "../config/env.php";
+  $ch = curl_init();
+
+  curl_setopt_array($ch, array(
+    CURLOPT_URL => 'https://gacela.dev/api/company/stores_info',
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => '',
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 0,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => 'GET',
+    CURLOPT_HTTPHEADER => array(
+      'Authorization: Bearer ' . DEV_COMPANY_API_TOKEN
+    ),
+  ));
+
+  $response = curl_exec($ch);
+  curl_close($ch);
+
+
+  $response_decoded = json_decode($response, true);
+
+  foreach ($response_decoded['results']['stores'] as $key => $store) {
+    foreach ($store as $key => $value) {
+      // look for selected storeId
+      if ($key == 'external_id' && $value ==  $external_id) {
+        $gacela_store_api_token = $store['api_token'];
+        $external_id = $store['external_id'];
+        $email = $store['email'];
+        $name = $store['name'];
+        $latitude = $store['latitude'];
+        $longitude = $store['longitude'];
+        $address = $store['address'];
+        $reference = $store['reference'];
+        $contact_name = $store['contact_name'];
+        $contact_lastname = $store['contact_lastname'];
+        $contact_phone = $store['contact_phone'];
+        $webhook_status_updates = $store['webhooks']['status_updates'];
+      }
     }
   }
-
-  $gacela_store_api_token = $payload['api_token'];
-  $external_id = $payload['external_id'];
-  $email = $payload['email'];
-  $name = $payload['name'];
-  $latitude = $payload['latitude'];
-  $longitude = $payload['longitude'];
-  $address = $payload['address'];
-  $reference = $payload['reference'];
-  $contact_name = $payload['contact_name'];
-  $contact_lastname = $payload['contact_lastname'];
-  $contact_phone = $payload['contact_phone'];
-  $webhook_status_updates = $payload['webhooks']['status_updates'];
 }
 
 
@@ -192,7 +223,7 @@ if (isset($_POST['mode']) && ($_POST['mode']) == 'create-store') {
                   <div class="fieldset  <?php echo $readOnly; ?>">
                     <div class="field">
                       <label class="field__label">Referencia de la tienda</label>
-                      <input type="text" class="field__input" name="address" value="<?php echo $reference; ?>" tabindex="4" maxlength="64" />
+                      <input type="text" class="field__input" name="reference" value="<?php echo $reference; ?>" tabindex="4" maxlength="64" />
 
                       <div class="field__placeholder">
                         Referencia de la tienda
@@ -358,10 +389,14 @@ if (isset($_POST['mode']) && ($_POST['mode']) == 'create-store') {
                   </div> -->
 
               <div class="form-area__action" style="margin-top: 20px">
-                <input type="hidden" name="storeId" value="<?php echo $_POST['storeId']; ?>" />
-                <input type="hidden" name="accessToken" value="<?php echo $gacela_store_api_token; ?>" />
+                <!-- <input type="hidden" name="storeId" value="<?php echo $_POST['storeId']; ?>" /> -->
+                <!-- <input type="hidden" name="accessToken" value="<?php echo $gacela_store_api_token; ?>" /> -->
+                <input type="hidden" name="mode" value="<?php echo $_POST['mode']; ?>" />
                 <button type="button" class="btn btn-primary btn-medium btn-create-new-store" tabindex="5">
                   Guardar
+                </button>
+                <button type="button" class="btn btn-secondary btn-medium btn-create-new-store-close" tabindex="5">
+                  Cerrar
                 </button>
                 <button style="display: none" class="btn btn-primary btn-medium btn-loading btn-create-new-store-loading">
                   <span>Primary Large button</span>
@@ -374,6 +409,8 @@ if (isset($_POST['mode']) && ($_POST['mode']) == 'create-store') {
     </div>
   </div>
   <!-- End store 1 -->
+
+  <div class="test-section"></div>
 </div>
 <!-- Start body -->
 
@@ -390,28 +427,30 @@ if (isset($_POST['mode']) && ($_POST['mode']) == 'create-store') {
       e.preventDefault();
       jQuery(".btn-create-new-store-loading").show();
       jQuery(this).hide();
-      var mode;
-      if (jQuery("#mode").is(":checked")) {
-        var mode = 1;
-      } else {
-        var mode = 0;
-      }
+      // var mode;
+      // if (jQuery("#mode").is(":checked")) {
+      //   var mode = 1;
+      // } else {
+      //   var mode = 0;
+      // }
       jQuery.ajax({
-        url: "form-store-load-settings.php",
+        url: "form-store-save-settings.php",
         type: "post",
-        data: {
-          mode: 'create-store',
-          form: jQuery(".new-store-settings-form").serialize() + "&mode=" + mode
-        },
+        data: jQuery(".new-store-settings-form").serialize(), // + "&mode=" + mode,
         success: function(data) {
           jQuery(".btn-create-new-store").show();
           jQuery(".btn-create-new-store-loading").hide();
-          jQuery("#store-form").hide();
+          jQuery(".test-section").html(data);
+          // jQuery("#store-form").hide();
         },
         error(error) {
           console.log(error);
         },
       });
+    });
+    jQuery("body").on("click", ".btn-create-new-store-close", function(e) {
+      e.preventDefault();
+      jQuery("#store-form").hide();
     });
   });
 </script>

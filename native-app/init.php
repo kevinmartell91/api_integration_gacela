@@ -4,7 +4,6 @@
 <head>
 	<!-- Include Ecwid JS SDK -->
 	<script src="https://djqizrxa6f10j.cloudfront.net/ecwid-sdk/js/1.2.9/ecwid-app.js"></script>
-
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 	<script>
@@ -16,20 +15,18 @@
 		});
 
 		// Get the store ID and access token
-		// var storeData = EcwidApp.getPayload();
-		// var storeId = storeData.store_id;
-		// var accessToken = storeData.access_token;
-		// var language = storeData.lang;
+		var storeData = EcwidApp.getPayload();
+		var storeId = storeData.store_id;
+		var accessToken = storeData.access_token;
+		var language = storeData.lang;
 
-		// if (storeData.public_token !== undefined) {
-		// 	var publicToken = storeData.public_token;
-		// }
+		if (storeData.public_token !== undefined) {
+			var publicToken = storeData.public_token;
+		}
 
-		// if (storeData.app_state !== undefined) {
-		// 	var appState = storeData.app_state;
-		// }
-
-		// do something...
+		if (storeData.app_state !== undefined) {
+			var appState = storeData.app_state;
+		}
 	</script>
 
 
@@ -48,8 +45,8 @@
 				url: 'form-company-load-settings.php',
 				type: 'post',
 				data: {
-					'storeId': "52105033",
-					'accessToken': "secret_7Snvc4b2QecA4fmYsysfWBQawdQjVFax"
+					'storeId': storeId,
+					'accessToken': accessToken
 				},
 				success: function(data) {
 					jQuery(".gacela-form-section").html(data);
